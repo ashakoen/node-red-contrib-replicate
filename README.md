@@ -11,6 +11,11 @@ A Node-RED node for generating images using the Replicate API. This node support
 
 ## Installation
 
+Either use the Editor - Menu - Manage Palette - Install option, or run the following npm command in your Node-RED user directory (typically `~/.node-red`):
+```
+npm i node-red-contrib-replicate
+```
+
 ### Manual Installation
 
 1. **Download the Code**:

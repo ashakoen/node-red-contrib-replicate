@@ -1,0 +1,41 @@
+# Development files
+.git
+.gitignore
+.npmignore
+.env
+.DS_Store
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Test files
+test/
+*.test.js
+*.spec.js
+
+# Documentation assets
+docs/
+images/
+*.png
+!node-red-flow.png
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Source control
+.github/
+.gitlab/
+
+# Development configs
+.eslintrc
+.prettierrc
+.babelrc
+tsconfig.json
+
+# Temporary files
+.tmp/
+.temp/
