@@ -1,0 +1,22 @@
+{
+  "name": "red-contrib-replicate",
+  "version": "1.0.0",
+  "description": "Node-RED node for creating image generations using Replicate.com",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "node-red"
+  ],
+  "node-red": {
+    "nodes": {
+      "replicate-node": "replicate.js"
+    }
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "got": "^14.4.5"
+  }
+}

@@ -1,0 +1,173 @@
+<!-- replicate.html -->
+
+<!-- Node Template -->
+<script type="text/html" data-template-name="replicate-node">
+    <div class="form-row">
+        <label for="node-input-name">Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-replicateConfig">Replicate Config</label>
+        <input type="hidden" id="node-input-replicateConfig">
+        <a href="" id="node-config-input-replicateConfig"></a>
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-modelType">Model Type</label>
+        <select id="node-input-modelType">
+            <option value="standard">Standard Base Model</option>
+            <option value="lora">LoRA Fine-tuned Model</option>
+        </select>
+    </div>
+
+    <!-- Fields for Standard and LoRA Models -->
+    <div class="form-row" id="prompt-row">
+        <label for="node-input-prompt">Prompt</label>
+        <input type="text" id="node-input-prompt" placeholder="Description of the image">
+    </div>
+
+    <!-- Fields for Standard Model -->
+    <div class="form-row" id="model-name-row">
+        <label for="node-input-model">Model Name</label>
+        <input type="text" id="node-input-model" placeholder="e.g., black-forest-labs/flux-dev">
+    </div>
+
+    <!-- Fields for LoRA Model -->
+    <div class="form-row" id="version-row">
+        <label for="node-input-version">Version (LoRA only)</label>
+        <input type="text" id="node-input-version" placeholder="LoRA model version hash">
+    </div>
+</script>
+
+<!-- Node Registration -->
+<script type="text/javascript">
+    RED.nodes.registerType('replicate-node', {
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: { value: "" },
+            replicateConfig: { type: "replicate-config", required: true },
+            modelType: { value: "standard" },
+            prompt: { value: "" },
+            model: { value: "" },
+            version: { value: "" }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-image",
+        paletteLabel: "replicate-node",
+        label: function () {
+            return this.name || "replicate-node";
+        },
+        oneditprepare: function () {
+            function toggleFields() {
+                const modelType = $("#node-input-modelType").val();
+
+                // Hide all optional fields initially
+                $("#prompt-row").hide();
+                $("#model-name-row").hide();
+                $("#version-row").hide();
+
+                if (modelType === "lora") {
+                    $("#prompt-row").show();
+                    $("#version-row").show();
+                } else {
+                    // Standard model
+                    $("#prompt-row").show();
+                    $("#model-name-row").show();
+                }
+            }
+
+            $("#node-input-modelType").change(function () {
+                toggleFields();
+            });
+
+            // Initialize field visibility
+            toggleFields();
+
+            // Initialize the configuration node selection
+            RED.nodes.initNodeConfigDialog(this, 'replicateConfig', 'replicate-config');
+        }
+    });
+</script>
+
+<!-- Configuration Node Template -->
+<script type="text/html" data-template-name="replicate-config">
+    <div class="form-row">
+        <label for="node-config-input-apiKey">API Key</label>
+        <input type="password" id="node-config-input-apiKey">
+    </div>
+</script>
+
+<!-- Configuration Node Registration -->
+<script type="text/javascript">
+    RED.nodes.registerType('replicate-config', {
+        category: 'config',
+        defaults: {
+            name: { value: "" }
+        },
+        credentials: {
+            apiKey: { type: "password" }
+        },
+        label: function () {
+            return this.name || "replicate-config";
+        }
+    });
+</script>
+
+<!-- Help Text -->
+<script type="text/html" data-help-name="replicate-node">
+    <p>A node to interact with the Replicate API for image generation using different models (Standard and LoRA Fine-tuned Models).</p>
+    
+    <h3>Configuration</h3>
+    <p>This node requires a Replicate API key, which can be configured in the configuration node.</p>
+    
+    <h3>Model Types</h3>
+    <dl class="message-properties">
+        <dt>Standard Base Model</dt>
+        <dd>Use standard models like "black-forest-labs/flux-dev". Requires a prompt and model name.</dd>
+        
+        <dt>LoRA Fine-tuned Model</dt>
+        <dd>Use fine-tuned LoRA models. Requires a prompt and version hash.</dd>
+    </dl>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>msg.payload <span class="property-type">object</span></dt>
+        <dd>
+            An object containing parameters for the API call. Parameters in msg.payload override those in the node configuration.
+            Common parameters include:
+            <ul>
+                <li><code>prompt</code> - Text description of the desired image</li>
+                <li><code>num_outputs</code> - Number of images to generate (1-4)</li>
+                <li><code>num_inference_steps</code> - Number of denoising steps</li>
+                <li><code>guidance_scale</code> - How closely to follow the prompt (0-10)</li>
+                <li><code>aspect_ratio</code> - Image aspect ratio (e.g., "1:1", "16:9")</li>
+                <li><code>output_format</code> - Image format ("webp", "jpg", "png")</li>
+                <li><code>seed</code> - Random seed for reproducible results</li>
+            </ul>
+        </dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>msg.payload <span class="property-type">object</span></dt>
+        <dd>
+            The response from the Replicate API containing:
+            <ul>
+                <li><code>output</code> - Array of generated image URLs</li>
+                <li><code>original_output</code> - Original API response</li>
+                <li><code>logs</code> - Generation process logs</li>
+                <li><code>metrics</code> - Performance metrics</li>
+                <li><code>id</code> - Prediction ID</li>
+                <li><code>status</code> - Final status</li>
+                <li><code>created_at</code> - Creation timestamp</li>
+                <li><code>completed_at</code> - Completion timestamp</li>
+            </ul>
+        </dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p>The node supports various model-specific parameters and will validate inputs according to each model's requirements. Invalid parameters will be adjusted to valid values with warning messages.</p>
+</script>

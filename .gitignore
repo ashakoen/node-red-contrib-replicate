@@ -1,0 +1,29 @@
+# Node-RED specific
+node_modules/
+*.node-red/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# MacOS
+.DS_Store
+
+# Environment variables
+.env
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-workspace
