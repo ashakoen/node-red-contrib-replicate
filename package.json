@@ -14,8 +14,8 @@
       "replicate-node": "replicate.js"
     }
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Asha Koen",
+  "license": "MIT",
   "dependencies": {
     "got": "^14.4.5"
   }
