@@ -48,6 +48,7 @@ A Node-RED node for generating images using the Replicate API. This node support
 - Comprehensive error handling and status feedback
 - Configurable output formats (webp, jpg, png)
 - Support for various model-specific parameters
+- Image preview functionality inspired by [node-red-contrib-image-output](https://github.com/rikukissa/node-red-contrib-image-output) by [@rikukissa](https://github.com/rikukissa)
 
 ## Usage
 
