@@ -48,11 +48,12 @@ A Node-RED node for generating images using the Replicate API. This node support
 - Comprehensive error handling and status feedback
 - Configurable output formats (webp, jpg, png)
 - Support for various model-specific parameters
+- Include config node for secure storage of Replicate API key
 - Image preview functionality inspired by [node-red-contrib-image-output](https://github.com/rikukissa/node-red-contrib-image-output) by [@rikukissa](https://github.com/rikukissa)
 
 ## Usage
 
-1. Add your Replicate API key in a configuration node.
+1. Add your Replicate API key in the configuration node.
 2. Choose your model type (Standard or LoRA).
 3. Configure model-specific parameters.
 4. Send input via msg.payload.
@@ -86,15 +87,61 @@ The node outputs a ```msg.payload``` object containing:
 
 ```
 [
-    {
-        "id": "standard-model-flow",
-        "type": "replicate-node",
-        "name": "Generate Image",
-        "modelType": "standard",
-        "model": "black-forest-labs/flux-dev",
-        "prompt": "a beautiful sunset over mountains",
-        "wires": [["output-node"]]
-    }
+  {
+    "id": "1ad8eec921654237",
+    "type": "tab",
+    "label": "Replicate",
+    "disabled": false,
+    "info": "",
+    "env": []
+  },
+  {
+    "id": "96bd7d88790b2536",
+    "type": "inject",
+    "z": "1ad8eec921654237",
+    "name": "",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "{\"prompt\":\"a fast racecar\",\"num_outputs\":1,\"guidance_scale\":5,\"num_inference_steps\":35,\"model\":\"black-forest-labs/flux-dev\",\"useLoRAModel\":false,\"image\":\"\",\"mask\":\"\",\"prompt_strength\":0.8,\"format\":\"png\",\"aspect_ratio\":\"4:5\"}",
+    "payloadType": "json",
+    "x": 650,
+    "y": 380,
+    "wires": [
+      [
+        "34302b79787f7c6e"
+      ]
+    ]
+  },
+  {
+    "id": "34302b79787f7c6e",
+    "type": "replicate-node",
+    "z": "1ad8eec921654237",
+    "name": "",
+    "replicateConfig": "de8b4314b35b9d1e",
+    "modelType": "standard",
+    "prompt": "",
+    "model": "",
+    "version": "",
+    "showPreview": true,
+    "previewWidth": "200",
+    "x": 820,
+    "y": 380,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "de8b4314b35b9d1e",
+    "type": "replicate-config"
+  }
 ]
 ```
 
