@@ -38,6 +38,26 @@
         <label for="node-input-version">Version (LoRA only)</label>
         <input type="text" id="node-input-version" placeholder="LoRA model version hash">
     </div>
+
+    <!-- Show Image Preview Option -->
+    <div class="form-row">
+        <label>&nbsp;</label>
+        <input type="checkbox" id="node-input-showPreview" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-showPreview" style="width:70%;"> Show Image Preview</label>
+    </div>
+
+    <!-- Add Image Preview Settings section -->
+    <div class="form-row">
+        <label style="width:100%"><i class="fa fa-image"></i> Image Preview Settings</label>
+        <div style="margin-left: 20px; margin-top: 10px;">
+            <div class="form-row">
+                <label for="node-input-previewWidth">Preview Width</label>
+                <input type="number" id="node-input-previewWidth" placeholder="160" min="50" max="800" style="width:100px;">
+                <span style="margin-left:5px;">pixels</span>
+            </div>
+        </div>
+    </div>
+
 </script>
 
 <!-- Node Registration -->
@@ -51,7 +71,14 @@
             modelType: { value: "standard" },
             prompt: { value: "" },
             model: { value: "" },
-            version: { value: "" }
+            version: { value: "" },
+            showPreview: { value: true },
+            previewWidth: {
+                value: 160,  // Default value
+                validate: function (v) {
+                    return !isNaN(v) && v >= 50 && v <= 800;
+                }
+            }
         },
         inputs: 1,
         outputs: 1,
@@ -88,6 +115,14 @@
 
             // Initialize the configuration node selection
             RED.nodes.initNodeConfigDialog(this, 'replicateConfig', 'replicate-config');
+
+            // Initialize showPreview checkbox
+            $("#node-input-showPreview").prop('checked', this.showPreview);
+
+            // Initialize preview width
+            if (!this.previewWidth) {
+                $("#node-input-previewWidth").val(160);
+            }
         }
     });
 </script>
@@ -168,6 +203,113 @@
         </dd>
     </dl>
 
-    <h3>Details</h3>
-    <p>The node supports various model-specific parameters and will validate inputs according to each model's requirements. Invalid parameters will be adjusted to valid values with warning messages.</p>
+    <h3>Image Preview</h3>
+    <p>This node now supports image preview directly within the Node-RED editor. Enable or disable the preview using the "Show Image Preview" checkbox in the node configuration.</p>
+</script>
+
+<!-- Client-Side Script for Image Rendering -->
+<script type="text/javascript">
+    (function () {
+
+        const latestImages = {};
+
+        function getPreviewWidth(nodeId) {
+            const node = RED.nodes.node(nodeId);
+            return (node && node.previewWidth) ? node.previewWidth : 160;  // Fallback to 160
+        }
+
+        // Function to remove image
+        var remove = function (nodeid) {
+            const id = nodeid;
+            const $img = document.getElementById("image-output-img-" + id);
+            const $bubble = document.getElementById("image-output-bubble-" + id);
+            const $controls = document.getElementById("image-output-controls-" + id);
+
+            $img && $img.remove();
+            $bubble && $bubble.remove();
+            $controls && $controls.remove();
+            delete latestImages[id];
+        };
+
+        // Function to render image
+        var render = function (id, data) {
+            let i = new Image();
+            let $img = document.getElementById("image-output-img-" + id);
+            const previewWidth = getPreviewWidth(id);
+
+            if (!$img) {
+                const $container = document.getElementById(id);
+                if (!$container) { return; }
+
+                // Create and insert bubble first
+                const bubble = document.createElementNS("http://www.w3.org/2000/svg", 'polyline');
+                bubble.setAttribute('id', "image-output-bubble-" + id);
+                bubble.setAttribute('style', 'fill:#E8F0E8');
+                bubble.setAttribute('stroke', '#999999');
+                $container.insertBefore(bubble, $container.lastChild.nextSibling);
+
+                // Create and insert image
+                const img = document.createElementNS("http://www.w3.org/2000/svg", 'image');
+                img.setAttribute('id', "image-output-img-" + id);
+                img.setAttribute('x', '0');
+                img.setAttribute('y', '45');
+                img.setAttribute('width', previewWidth.toString());
+                img.style.cursor = 'pointer';
+                $container.insertBefore(img, $container.lastChild.nextSibling);
+                $img = img;
+            }
+
+            i.onload = function () {
+                try {
+                    const width = i.width || previewWidth;
+                    const height = i.height || previewWidth;
+                    const aspectRatio = width / height;
+                    const imgHeight = Math.max(
+                        Math.round(previewWidth / aspectRatio),
+                        previewWidth / 2
+                    );
+
+                    // Update image dimensions
+                    $img.setAttribute('width', previewWidth.toString());
+                    $img.setAttribute('height', imgHeight.toString());
+
+                    // Update bubble shape
+                    const bubbleId = $img.id.replace("img", "bubble");
+                    const $bubble = document.getElementById(bubbleId);
+                    if ($bubble) {
+                        const left = 0;
+                        const top = 45;
+                        const right = previewWidth;
+                        const bottom = top + imgHeight;
+                        const points = `${left + 4},${top - 17} ${left + 4},${top} ${right},${top} ${right},${bottom} ${left},${bottom} ${left},${top - 21}`;
+                        $bubble.setAttribute('points', points);
+                    }
+                } catch (error) {
+                    console.log('Error updating dimensions:', error);
+                    $img.setAttribute('width', previewWidth.toString());
+                    $img.setAttribute('height', previewWidth.toString());
+                }
+            };
+
+            if ($img) {
+                $img.setAttribute('href', "data:image/png;base64," + data);
+                i.src = "data:image/png;base64," + data;
+            }
+        };
+
+        // Function to remove image
+        var remove = function (nodeid) {
+            const $img = document.getElementById("image-output-img-" + nodeid);
+            if ($img) $img.remove();
+        };
+
+        // Subscribe to the 'image' topic
+        RED.comms.subscribe('image', function (event, data) {
+            if (data && data.hasOwnProperty("data")) {
+                render(data.id, data.data);
+            } else {
+                remove(data.id);
+            }
+        });
+    })();
 </script>

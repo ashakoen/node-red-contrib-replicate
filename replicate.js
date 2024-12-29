@@ -6,7 +6,6 @@ module.exports = function (RED) {
         // No additional code is required here as the API key is stored in credentials
     }
 
-
     function ReplicateNode(config) {
         RED.nodes.createNode(this, config);
         const node = this;
@@ -16,6 +15,9 @@ module.exports = function (RED) {
 
         // Retrieve API key from the configuration node's credentials
         const apiKey = replicateConfig ? replicateConfig.credentials.apiKey : null;
+
+        // Get the showPreview setting from the node configuration
+        const showPreview = config.showPreview !== false;
 
         node.on('input', async function (msg, send, done) {
             // Check for API Key
@@ -193,8 +195,6 @@ module.exports = function (RED) {
                 // Remove any prompt parameter as it's not used by Redux models
                 delete inputParams.prompt;
 
-                apiUrl = 'https://api.replicate.com/v1/models/black-forest-labs/flux-redux-dev/predictions';
-
                 allowedParams = [
                     'redux_image', 'guidance', 'megapixels', 'num_outputs',
                     'aspect_ratio', 'output_format', 'output_quality',
@@ -251,7 +251,6 @@ module.exports = function (RED) {
                     node.warn(`Invalid megapixels value '${original}' defaulting to '1' (valid values: '1', '0.25')`, msg);
                 }
 
-
             } else if (inputParams.model && inputParams.model.toLowerCase().includes('flux-redux-schnell')) {
                 // FLUX Redux Schnell Model
                 if (!inputParams.redux_image || inputParams.redux_image === '') {
@@ -307,7 +306,7 @@ module.exports = function (RED) {
                 // Validate megapixels
                 if (inputParams.megapixels && !['1', '0.25'].includes(inputParams.megapixels)) {
                     const original = inputParams.megapixels;
-                    inputParams.megapixels = '1';  // Default to 1 if invalid
+                    inputParams.megapixels = '1';
                     node.warn(`Invalid megapixels value '${original}' defaulting to '1' (valid values: '1', '0.25')`, msg);
                 }
 
@@ -576,6 +575,34 @@ module.exports = function (RED) {
                         ? prediction.output
                         : [prediction.output];
 
+                    // Fetch image data and publish to front-end
+                    if (showPreview) {
+                        for (let imageUrl of outputUrls) {
+                            try {
+                                let response;
+                                if (typeof fetch !== 'undefined') {
+                                    response = await fetch(imageUrl);
+                                } else {
+                                    const fetch = (await import('node-fetch')).default;
+                                    response = await fetch(imageUrl);
+                                }
+
+                                const arrayBuffer = await response.arrayBuffer();
+                                const buffer = Buffer.from(arrayBuffer);
+                                const base64Image = buffer.toString('base64');
+
+                                // Publish the image data to the front-end using RED.comms.publish
+                                RED.comms.publish("image", { 
+                                    id: node.id,
+                                    data: base64Image,
+                                    originalUrl: prediction.output[0] // Add the original URL from the Replicate API response
+                                });
+                            } catch (err) {
+                                node.warn(`Failed to fetch image data: ${err.message}`, msg);
+                            }
+                        }
+                    }
+
                     msg.payload = {
                         output: outputUrls,  // Array of image URLs
                         original_output: prediction.output,
@@ -619,7 +646,15 @@ module.exports = function (RED) {
                         // If it's a URL, fetch and convert it to base64
                         try {
                             node.status({ fill: 'blue', shape: 'dot', text: `Fetching ${paramName}` });
-                            let response = await fetch(param);
+
+                            let response;
+                            if (typeof fetch !== 'undefined') {
+                                response = await fetch(param);
+                            } else {
+                                const fetch = (await import('node-fetch')).default;
+                                response = await fetch(param);
+                            }
+
                             // Use response.arrayBuffer() instead of response.buffer()
                             let arrayBuffer = await response.arrayBuffer();
                             const buffer = Buffer.from(arrayBuffer);
@@ -649,6 +684,12 @@ module.exports = function (RED) {
                     return null;
                 }
             }
+        });
+
+        // Handle node closure to clean up images from the front-end
+        node.on("close", function() {
+            RED.comms.publish("image", { id: node.id });
+            node.status({});
         });
     }
 
