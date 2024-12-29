@@ -9,21 +9,34 @@ A Node-RED node for generating images using the Replicate API. This node support
 
 ## Installation
 
-### Node-RED Palette Manager
+### Manual Installation
 
-1. Open Node-RED in your browser.
-2. Go to the top right menu, select "Manage palette".
-3. Click on the "Install" tab.
-4. Search for `node-red-contrib-replicate`.
-5. Click the install button.
+1. **Download the Code**:
+   - Clone the repository or download the ZIP file from GitHub.
 
-### Command Line
+   ```
+   git clone https://github.com/ashakoen/node-red-contrib-replicate.git
+   ```
 
-Run the following command in your Node-RED user directory (typically `~/.node-red`):
+2. **Navigate to the Node-RED User Directory**:
+   - Typically, this is located at `~/.node-red`.
 
-```
-npm install node-red-contrib-replicate
-```
+   ```
+   cd ~/.node-red
+   ```
+
+3. **Copy the Node Files**:
+   - Copy the downloaded files into the `~/.node-red` directory.
+
+4. **Install Dependencies**:
+   - Run the following command to install the necessary dependencies.
+
+   ```
+   npm install ./node-red-contrib-replicate
+   ```
+
+5. **Restart Node-RED**:
+   - Restart your Node-RED instance to load the new node.
 
 ## Features
 
@@ -61,7 +74,7 @@ The node outputs a ```msg.payload``` object containing:
 - ```original_output``` - Original API response
 - ```logs``` - Generation process logs
 - ```metrics``` - Performance metrics
-- ``` ID```  - Prediction ID
+- ```id``` - Prediction ID
 - ```status``` - Final status
 - ```created_at``` - Creation timestamp
 - ```completed_at``` - Completion timestamp
