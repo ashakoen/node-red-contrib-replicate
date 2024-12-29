@@ -1,5 +1,7 @@
 # node-red-contrib-replicate
 
+![Node-RED Replicate Flow Example](node-red-flow.png)
+
 A Node-RED node for generating images using the Replicate API. This node supports various Replicate models, including standard base models and LoRA fine-tuned models.
 
 ## Prerequisites
